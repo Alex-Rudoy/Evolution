@@ -42,7 +42,7 @@ export class Creature extends Entity {
       maxHP: 1000,
       regen: 20,
       damage: 300,
-      speed: 50,
+      speed: 80,
     };
     this.priorities = {
       aggression: 100,
@@ -70,6 +70,7 @@ export class Creature extends Entity {
             0
           ) / arrayToChooseFrom.length;
       });
+      this.hunger = arrayToChooseFrom.reduce((sum, creature) => sum + creature.hunger, 0) / arrayToChooseFrom.length;
       this.updateGameStats();
     }
 
@@ -79,8 +80,7 @@ export class Creature extends Entity {
       this.hunger = (parent1.hunger + parent2.hunger) / 2;
       Object.keys(this.stats).forEach((stat) => {
         this.stats[stat as keyof creatureStatsType] =
-          ((parent1.stats[stat as keyof creatureStatsType] + parent2.stats[stat as keyof creatureStatsType]) / 2) *
-          1.01;
+          (parent1.stats[stat as keyof creatureStatsType] + parent2.stats[stat as keyof creatureStatsType]) / 2;
       });
       Object.keys(this.priorities).forEach((priority) => {
         this.priorities[priority as keyof creaturePrioritiesType] =
@@ -105,15 +105,28 @@ export class Creature extends Entity {
   }
 
   mutate() {
-    Object.keys(this.stats).forEach((stat) => {
+    const randomMutationAmount = Math.random() * 0.2;
+
+    const statsList = Object.keys(this.stats);
+    const randomStat = statsList[Math.floor(Math.random() * statsList.length)];
+    this.stats[randomStat as keyof creatureStatsType] =
+      this.stats[randomStat as keyof creatureStatsType] * (1 + randomMutationAmount);
+
+    statsList.forEach((stat) => {
       this.stats[stat as keyof creatureStatsType] = Math.round(
-        this.stats[stat as keyof creatureStatsType] * (0.9 + Math.random() * 0.2)
-      ); // +- 10% for every stat
+        this.stats[stat as keyof creatureStatsType] * (1 - randomMutationAmount / 4)
+      ); // decrease all other stats to balance out
     });
-    Object.keys(this.priorities).forEach((priority) => {
+
+    const prioritiesList = Object.keys(this.priorities);
+    const randomPriority = prioritiesList[Math.floor(Math.random() * prioritiesList.length)];
+    this.priorities[randomPriority as keyof creaturePrioritiesType] =
+      this.priorities[randomPriority as keyof creaturePrioritiesType] * (1 + randomMutationAmount);
+
+    prioritiesList.forEach((priority) => {
       this.priorities[priority as keyof creaturePrioritiesType] = Math.round(
-        this.priorities[priority as keyof creaturePrioritiesType] * (0.9 + Math.random() * 0.2)
-      ); // +- 10% for every priority
+        this.priorities[priority as keyof creaturePrioritiesType] * (1 - randomMutationAmount / 4)
+      ); // decrease all other priorities to balance out
     });
   }
 
@@ -128,7 +141,7 @@ export class Creature extends Entity {
       Math.PI * 2,
       true
     );
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "#111";
     ctx.fill();
     ctx.closePath();
   }
@@ -147,21 +160,22 @@ export class Creature extends Entity {
       {
         name: "breed",
         value: closestFertileAlly
-          ? (this.fertility * this.priorities.breeding) / this.getRelativePositionTo(closestFertileAlly).distance
+          ? (this.fertility * (this.priorities.breeding / 100) ** 3) /
+            this.getRelativePositionTo(closestFertileAlly).distance
           : 0,
         proposedAngle: this.getRelativePositionTo(closestFertileAlly).angle,
       },
       {
         name: "eat",
         value: closestFood
-          ? (this.hunger * this.priorities.food) / this.getRelativePositionTo(closestFood).distance
+          ? (this.hunger * (this.priorities.food / 100) ** 3) / this.getRelativePositionTo(closestFood).distance
           : 0,
         proposedAngle: this.getRelativePositionTo(closestFood).angle,
       },
       {
         name: "attack",
         value: closestEnemy
-          ? (((this.currentHP / closestEnemy.currentHP) * this.priorities.aggression * 50) /
+          ? (((this.currentHP / closestEnemy.currentHP) * (this.priorities.aggression / 100) ** 3 * 50) /
               this.getRelativePositionTo(closestEnemy).distance) *
             this.faction.coefficients[closestEnemy.faction.name]
           : 0,
@@ -170,7 +184,7 @@ export class Creature extends Entity {
       {
         name: "run",
         value: closestEnemy
-          ? ((closestEnemy.currentHP / this.currentHP) * this.priorities.safety * 50) /
+          ? ((closestEnemy.currentHP / this.currentHP) * (this.priorities.safety / 100) ** 3 * 50) /
             this.getRelativePositionTo(closestEnemy).distance /
             this.faction.coefficients[closestEnemy.faction.name]
           : 0,
@@ -209,7 +223,7 @@ export class Creature extends Entity {
     this.isAttacked = true;
     this.attackedTimeout = setTimeout(() => {
       this.isAttacked = false;
-    }, 300);
+    }, 1000);
   }
 
   heal(hp: number) {

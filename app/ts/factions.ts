@@ -3,7 +3,7 @@ import { factionType } from "./types";
 export const red: factionType = {
   id: 1,
   name: "red",
-  color: "#ce0000",
+  color: "#df4040",
   coefficients: {
     red: 1,
     gold: 1.2,
@@ -16,7 +16,7 @@ export const red: factionType = {
 export const gold: factionType = {
   id: 2,
   name: "gold",
-  color: "#a78a08",
+  color: "#d1b950",
   coefficients: {
     red: 0.8,
     gold: 1,
@@ -29,7 +29,7 @@ export const gold: factionType = {
 export const green: factionType = {
   id: 3,
   name: "green",
-  color: "#00ce0a",
+  color: "#6acf6f",
   coefficients: {
     red: 0.9,
     gold: 0.8,
@@ -42,7 +42,7 @@ export const green: factionType = {
 export const blue: factionType = {
   id: 4,
   name: "blue",
-  color: "#0004ff",
+  color: "#328dc2",
   coefficients: {
     red: 1.1,
     gold: 0.9,
@@ -55,7 +55,7 @@ export const blue: factionType = {
 export const pink: factionType = {
   id: 5,
   name: "pink",
-  color: "#dd01dd",
+  color: "#8d4b8f",
   coefficients: {
     red: 1.2,
     gold: 1.1,

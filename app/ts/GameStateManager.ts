@@ -111,7 +111,9 @@ export default class GameStateManager {
       creature.fertility += secondsPassed * 15;
       creature.heal(creature.stats.regen * secondsPassed);
       creature.takeDamage((creature.age * 2 * secondsPassed * creature.stats.maxHP) / 1000);
-      creature.takeDamage(((creature.hunger / 2) * secondsPassed * creature.stats.maxHP) / 1000);
+      creature.takeDamage(
+        ((creature.hunger / 4) * (creature.stats.maxHP / 1000) + creature.hunger / 4) * secondsPassed
+      );
     });
   }
 
@@ -119,6 +121,7 @@ export default class GameStateManager {
     this.creatures = this.creatures.filter((creature) => {
       if (!creature.toDestroy) return true;
       if (creature.isAttacked) {
+        this.foods.push(new Food(creature));
         this.foods.push(new Food(creature));
         this.foods.push(new Food(creature));
         this.foods.push(new Food(creature));
@@ -132,7 +135,10 @@ export default class GameStateManager {
   everySecond() {
     if (this.totalTime > this.fullSeconds + 1) {
       this.fullSeconds++;
-      this.foods.push(new Food());
+      if (Math.random() + 0.3 > this.creatures.length / 100) {
+        // more population - less food
+        this.foods.push(new Food());
+      }
       this.creatures.push(new Creature({ allCreatures: this.creatures, spawnFactionId: this.fullSeconds % 5 }));
     }
   }
