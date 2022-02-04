@@ -1,6 +1,5 @@
 import { Food } from "./classes/Food";
 import { Creature } from "./classes/Creature";
-import { debouncedClg } from "./utils/debouncedClg";
 
 export default class GameStateManager {
   creatures: Creature[];
@@ -38,7 +37,6 @@ export default class GameStateManager {
     this.sanityCheck();
 
     this.draw();
-    debouncedClg(this.creatures);
   }
 
   draw() {
@@ -104,27 +102,27 @@ export default class GameStateManager {
   damageBoth(creature1: Creature, creature2: Creature, secondsPassed: number) {
     creature1.dealDamageTo(creature2, secondsPassed);
     creature2.dealDamageTo(creature1, secondsPassed);
-    if (creature1.toDestroy || creature2.toDestroy) {
-      this.foods.push(new Food(creature1));
-      this.foods.push(new Food(creature1));
-      this.foods.push(new Food(creature1));
-    }
   }
 
   updateValues(secondsPassed: number) {
     this.creatures.forEach((creature) => {
       creature.hunger += secondsPassed * 20;
       creature.age += secondsPassed;
-      creature.fertility += secondsPassed * 20;
+      creature.fertility += secondsPassed * 15;
       creature.heal(creature.stats.regen * secondsPassed);
-      creature.takeDamage(creature.age * 2 * secondsPassed);
-      creature.takeDamage((creature.hunger / 2) * secondsPassed);
+      creature.takeDamage((creature.age * 2 * secondsPassed * creature.stats.maxHP) / 1000);
+      creature.takeDamage(((creature.hunger / 2) * secondsPassed * creature.stats.maxHP) / 1000);
     });
   }
 
   checkDead() {
     this.creatures = this.creatures.filter((creature) => {
       if (!creature.toDestroy) return true;
+      if (creature.isAttacked) {
+        this.foods.push(new Food(creature));
+        this.foods.push(new Food(creature));
+        this.foods.push(new Food(creature));
+      }
       return false;
     });
 
@@ -135,13 +133,13 @@ export default class GameStateManager {
     if (this.totalTime > this.fullSeconds + 1) {
       this.fullSeconds++;
       this.foods.push(new Food());
-      this.creatures.push(new Creature({ allCreatures: this.creatures }));
+      this.creatures.push(new Creature({ allCreatures: this.creatures, spawnFactionId: this.fullSeconds % 5 }));
     }
   }
 
   sanityCheck() {
-    if (this.creatures.length > 400) {
-      this.creatures = [];
+    if (this.creatures.length > 600) {
+      this.creatures = [new Creature({ allCreatures: this.creatures })];
       this.start();
     }
   }

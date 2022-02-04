@@ -28,7 +28,7 @@ export const gold: factionType = {
 
 export const green: factionType = {
   id: 3,
-  name: "gold",
+  name: "green",
   color: "#00ce0a",
   coefficients: {
     red: 0.9,
@@ -41,7 +41,7 @@ export const green: factionType = {
 
 export const blue: factionType = {
   id: 4,
-  name: "gold",
+  name: "blue",
   color: "#0004ff",
   coefficients: {
     red: 1.1,
@@ -54,7 +54,7 @@ export const blue: factionType = {
 
 export const pink: factionType = {
   id: 5,
-  name: "gold",
+  name: "pink",
   color: "#dd01dd",
   coefficients: {
     red: 1.2,
