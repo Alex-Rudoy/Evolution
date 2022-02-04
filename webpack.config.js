@@ -2,6 +2,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin"); // Require  html-webpa
 const copyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
+  mode: "development",
   entry: __dirname + "/app/index.ts", // webpack entry point. Module to start building dependency graph
   output: {
     path: __dirname + "/dist", // Folder to store generated bundle
@@ -64,7 +65,7 @@ module.exports = {
   ],
   devServer: {
     // configuration for webpack-dev-server
-    contentBase: "./app", //source of static assets
+    static: "./app", //source of static assets
     port: 3000, // port to run dev-server
   },
 };

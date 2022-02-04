@@ -3,15 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pathfinding visualizer</title>
-    <link rel="icon" type="image/png" href="./img/end.png" />
-    <link href="https://fonts.googleapis.com/css2?family=Muli:wght@300;400;700&display=swap" rel="stylesheet" />
+    <title>Evolution simulation</title>
+    <link rel="icon" type="image/png" href="./img/favicon.png" />
   </head>
   <body>
     <div class="wrapper">
-      <main>
-        <section class="field"></section>
-      </main>
+      <div class="game">
+        <canvas width="1600" height="900"></canvas>
+      </div>
+      <div class="infoContainer">
+        <b id="currentRound">Current round: 1</b>
+        <b>Stats:</b>
+        <div class="stats">
+          <p>MaxHP:</p>
+          <p id="Max HP">1000</p>
+          <p>Regen:</p>
+          <p id="Regen">20</p>
+          <p>Damage:</p>
+          <p id="Damage">300</p>
+          <p>Speed:</p>
+          <p id="Speed">50</p>
+        </div>
+        <b>Priorities:</b>
+        <div class="stats">
+          <p>Aggression:</p>
+          <p id="Aggression">100</p>
+          <p>Safety:</p>
+          <p id="Safety">100</p>
+          <p>Breeding:</p>
+          <p id="Breeding">100</p>
+          <p>Food:</p>
+          <p id="Food">100</p>
+        </div>
+      </div>
     </div>
   </body>
 </html>
