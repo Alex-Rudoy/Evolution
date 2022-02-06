@@ -8,7 +8,6 @@ export type creatureStatsType = {
 export type creaturePrioritiesType = {
   aggression: number;
   food: number;
-  safety: number;
   breeding: number;
 };
 

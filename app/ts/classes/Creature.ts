@@ -47,7 +47,7 @@ export class Creature extends Entity {
     this.priorities = {
       aggression: 100,
       food: 100,
-      safety: 100,
+      // safety: 100,
       breeding: 100,
     };
 
@@ -105,27 +105,29 @@ export class Creature extends Entity {
   }
 
   mutate() {
-    const randomMutationAmount = Math.random() * 0.2;
+    const randomStatMutationAmount = Math.random() * 0.2;
 
     const statsList = Object.keys(this.stats);
     const randomStat = statsList[Math.floor(Math.random() * statsList.length)];
     this.stats[randomStat as keyof creatureStatsType] =
-      this.stats[randomStat as keyof creatureStatsType] * (1 + randomMutationAmount);
+      this.stats[randomStat as keyof creatureStatsType] * (1 + randomStatMutationAmount);
 
     statsList.forEach((stat) => {
       this.stats[stat as keyof creatureStatsType] = Math.round(
-        this.stats[stat as keyof creatureStatsType] * (1 - randomMutationAmount / 4)
+        this.stats[stat as keyof creatureStatsType] * (1 - randomStatMutationAmount / 4)
       ); // decrease all other stats to balance out
     });
+
+    const randomPriorityMutationAmount = Math.random() * 0.2;
 
     const prioritiesList = Object.keys(this.priorities);
     const randomPriority = prioritiesList[Math.floor(Math.random() * prioritiesList.length)];
     this.priorities[randomPriority as keyof creaturePrioritiesType] =
-      this.priorities[randomPriority as keyof creaturePrioritiesType] * (1 + randomMutationAmount);
+      this.priorities[randomPriority as keyof creaturePrioritiesType] * (1 + randomPriorityMutationAmount);
 
     prioritiesList.forEach((priority) => {
       this.priorities[priority as keyof creaturePrioritiesType] = Math.round(
-        this.priorities[priority as keyof creaturePrioritiesType] * (1 - randomMutationAmount / 4)
+        this.priorities[priority as keyof creaturePrioritiesType] * (1 - randomPriorityMutationAmount / 3)
       ); // decrease all other priorities to balance out
     });
   }
@@ -175,21 +177,24 @@ export class Creature extends Entity {
       {
         name: "attack",
         value: closestEnemy
-          ? (((this.currentHP / closestEnemy.currentHP) * (this.priorities.aggression / 100) ** 3 * 50) /
+          ? (((this.currentHP / closestEnemy.currentHP) *
+              (this.currentHP / this.stats.maxHP) *
+              (this.priorities.aggression / 100) ** 3 *
+              50) /
               this.getRelativePositionTo(closestEnemy).distance) *
             this.faction.coefficients[closestEnemy.faction.name]
           : 0,
         proposedAngle: this.getRelativePositionTo(closestEnemy).angle,
       },
-      {
-        name: "run",
-        value: closestEnemy
-          ? ((closestEnemy.currentHP / this.currentHP) * (this.priorities.safety / 100) ** 3 * 50) /
-            this.getRelativePositionTo(closestEnemy).distance /
-            this.faction.coefficients[closestEnemy.faction.name]
-          : 0,
-        proposedAngle: this.getRelativePositionTo(closestEnemy).angle + Math.PI,
-      },
+      // {
+      //   name: "run",
+      //   value: closestEnemy
+      //     ? ((closestEnemy.currentHP / this.currentHP) * (this.priorities.safety / 100) ** 3 * 50) /
+      //       this.getRelativePositionTo(closestEnemy).distance /
+      //       this.faction.coefficients[closestEnemy.faction.name]
+      //     : 0,
+      //   proposedAngle: this.getRelativePositionTo(closestEnemy).angle + Math.PI,
+      // },
     ];
 
     this.moveAngle = choices.reduce((a, b) => (a.value > b.value ? a : b)).proposedAngle;
@@ -243,7 +248,7 @@ export class Creature extends Entity {
     document.getElementById(`${this.faction.name} Aggression`)!.innerText = Math.round(
       this.priorities.aggression
     ).toString();
-    document.getElementById(`${this.faction.name} Safety`)!.innerText = Math.round(this.priorities.safety).toString();
+    // document.getElementById(`${this.faction.name} Safety`)!.innerText = Math.round(this.priorities.safety).toString();
     document.getElementById(`${this.faction.name} Breeding`)!.innerText = Math.round(
       this.priorities.breeding
     ).toString();
