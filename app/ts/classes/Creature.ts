@@ -1,13 +1,34 @@
+import { Brain } from "./Brain";
 import Entity from "./Entity";
-import { factions } from "../factions";
-import { Stats } from "webpack";
-import { creaturePrioritiesType, creatureStatsType, factionType } from "../types";
 import { Food } from "./Food";
+import { Genes } from "./Genes";
+import { Traits } from "./Traits";
+import { factions } from "../factions";
+import {
+  colliderType,
+  creaturePrioritiesType,
+  creatureStatsType,
+  factionType,
+} from "../types";
+
+import {
+  BG_COLOR,
+  DEFAULT_CREATURE_HITBOX,
+  DEFAULT_DAMAGE,
+  DEFAULT_MAX_HP,
+  DEFAULT_REGEN,
+  DEFAULT_SIGHT_RADIUS,
+  DEFAULT_SPEED,
+  DEG_360,
+  FIELD_HEIGHT,
+  FIELD_WIDTH,
+} from "../utils/constants";
+import { debouncedClg } from "../utils/debouncedClg";
+import { randomBetween } from "../utils/randomBetween";
 
 export class Creature extends Entity {
   faction: factionType;
   stats: creatureStatsType;
-  priorities: creaturePrioritiesType;
 
   moveAngle: number;
   currentHP: number;
@@ -17,202 +38,104 @@ export class Creature extends Entity {
   isAttacked: boolean;
   attackedTimeout: NodeJS.Timeout | null;
 
+  genes: Genes;
+  traits: Traits;
+  brain: Brain;
+
   constructor({
     parent1,
     parent2,
-    allCreatures,
-    spawnFactionId,
+    newEpoch,
   }: {
     parent1?: Creature;
     parent2?: Creature;
-    allCreatures?: Creature[];
-    spawnFactionId?: number;
+    newEpoch?: boolean;
   } = {}) {
-    const fallbackFaction =
-      typeof spawnFactionId === "number"
-        ? factions[spawnFactionId]
-        : factions[Math.floor(Math.random() * factions.length)];
-    const x = parent1 && parent2 ? (parent1.collider.x + parent2.collider.x) / 2 : Math.random() * 1600;
-    const y = parent1 && parent2 ? (parent1.collider.y + parent2.collider.y) / 2 : Math.random() * 900;
-    const hitbox = 10;
-    super(x, y, hitbox, parent1 ? parent1.faction.color : fallbackFaction.color);
+    const fallbackFaction = factions[randomBetween(0, factions.length, 1)];
 
-    this.faction = fallbackFaction;
+    super(
+      parent1 && parent2 && !newEpoch
+        ? (parent1.collider.x + parent2.collider.x) / 2
+        : randomBetween(0, FIELD_WIDTH),
+      parent1 && parent2 && !newEpoch
+        ? (parent1.collider.y + parent2.collider.y) / 2
+        : randomBetween(0, FIELD_HEIGHT),
+      DEFAULT_CREATURE_HITBOX,
+      parent1 && !newEpoch
+        ? parent1.faction.colors[1]
+        : fallbackFaction.colors[1]
+    );
+
+    this.faction = parent1 && !newEpoch ? parent1.faction : fallbackFaction;
+
+    this.genes = new Genes({ parent1, parent2 });
+    this.traits = new Traits({ parent1, parent2 });
+    this.brain = new Brain(this);
+
+    this.updateCollider({
+      hitbox: DEFAULT_CREATURE_HITBOX * this.traits.traits.vitality,
+      color: this.faction.colors[this.traits.traits.agility],
+    });
+
     this.stats = {
-      maxHP: 1000,
-      regen: 20,
-      damage: 300,
-      speed: 80,
+      maxHP: DEFAULT_MAX_HP * this.traits.traits.vitality,
+      regen: DEFAULT_REGEN * this.traits.traits.vitality,
+      damage: DEFAULT_DAMAGE * this.traits.traits.strength,
+      speed: DEFAULT_SPEED * this.traits.traits.agility,
+      sightRadius: DEFAULT_SIGHT_RADIUS * this.traits.traits.sense,
     };
-    this.priorities = {
-      aggression: 100,
-      food: 100,
-      // safety: 100,
-      breeding: 100,
-    };
-
-    if (allCreatures && allCreatures.length) {
-      let arrayToChooseFrom = spawnFactionId
-        ? allCreatures.filter((creature) => creature.faction.id === spawnFactionId)
-        : allCreatures;
-      if (!arrayToChooseFrom.length) {
-        arrayToChooseFrom = allCreatures;
-      }
-      Object.keys(this.stats).forEach((stat) => {
-        this.stats[stat as keyof creatureStatsType] =
-          arrayToChooseFrom.reduce((sum, creature) => sum + creature.stats[stat as keyof creatureStatsType], 0) /
-          arrayToChooseFrom.length;
-      });
-      Object.keys(this.priorities).forEach((priority) => {
-        this.priorities[priority as keyof creaturePrioritiesType] =
-          arrayToChooseFrom.reduce(
-            (sum, creature) => sum + creature.priorities[priority as keyof creaturePrioritiesType],
-            0
-          ) / arrayToChooseFrom.length;
-      });
-      this.hunger = arrayToChooseFrom.reduce((sum, creature) => sum + creature.hunger, 0) / arrayToChooseFrom.length;
-      this.updateGameStats();
-    }
-
-    if (parent1 && parent2) {
-      this.faction = parent1.faction;
-      this.collider.color = parent1.faction.color;
-      this.hunger = (parent1.hunger + parent2.hunger) / 2;
-      Object.keys(this.stats).forEach((stat) => {
-        this.stats[stat as keyof creatureStatsType] =
-          (parent1.stats[stat as keyof creatureStatsType] + parent2.stats[stat as keyof creatureStatsType]) / 2;
-      });
-      Object.keys(this.priorities).forEach((priority) => {
-        this.priorities[priority as keyof creaturePrioritiesType] =
-          (parent1.priorities[priority as keyof creaturePrioritiesType] +
-            parent2.priorities[priority as keyof creaturePrioritiesType]) /
-          2;
-      });
-    }
-
-    if (spawnFactionId) {
-      this.faction;
-    }
-    this.mutate();
-
-    this.moveAngle = Math.random() * 2 * Math.PI;
+    this.moveAngle = 0;
     this.currentHP = this.stats.maxHP;
     this.age = 0;
     this.hunger = 0;
     this.fertility = 0;
     this.isAttacked = false;
     this.attackedTimeout = null;
-  }
 
-  mutate() {
-    const randomStatMutationAmount = Math.random() * 0.2;
-
-    const statsList = Object.keys(this.stats);
-    const randomStat = statsList[Math.floor(Math.random() * statsList.length)];
-    this.stats[randomStat as keyof creatureStatsType] =
-      this.stats[randomStat as keyof creatureStatsType] * (1 + randomStatMutationAmount);
-
-    statsList.forEach((stat) => {
-      this.stats[stat as keyof creatureStatsType] = Math.round(
-        this.stats[stat as keyof creatureStatsType] * (1 - randomStatMutationAmount / 4)
-      ); // decrease all other stats to balance out
-    });
-
-    const randomPriorityMutationAmount = Math.random() * 0.2;
-
-    const prioritiesList = Object.keys(this.priorities);
-    const randomPriority = prioritiesList[Math.floor(Math.random() * prioritiesList.length)];
-    this.priorities[randomPriority as keyof creaturePrioritiesType] =
-      this.priorities[randomPriority as keyof creaturePrioritiesType] * (1 + randomPriorityMutationAmount);
-
-    prioritiesList.forEach((priority) => {
-      this.priorities[priority as keyof creaturePrioritiesType] = Math.round(
-        this.priorities[priority as keyof creaturePrioritiesType] * (1 - randomPriorityMutationAmount / 3)
-      ); // decrease all other priorities to balance out
-    });
+    if (newEpoch) return;
+    if (parent1) {
+      this.hunger = parent1.hunger;
+    }
+    if (parent2) {
+      this.hunger = (this.hunger + parent2.hunger) / 2;
+    }
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
     super.draw(ctx);
+
+    // draw pseudo-healthbar by drawing hollow circle
     ctx.beginPath();
     ctx.arc(
       this.collider.x,
       this.collider.y,
-      this.collider.hitbox - (this.collider.hitbox * this.currentHP) / this.stats.maxHP,
+      this.collider.hitbox -
+        (this.collider.hitbox * this.currentHP) / this.stats.maxHP,
       0,
       Math.PI * 2,
       true
     );
-    ctx.fillStyle = "#111";
+    ctx.fillStyle = BG_COLOR;
     ctx.fill();
     ctx.closePath();
-  }
-
-  decision(creatures: Creature[], foods: Food[]) {
-    const enemiesInSight = creatures.filter((creature) => creature.faction.id !== this.faction.id);
-    const closestEnemy = this.findClosest(enemiesInSight);
-
-    const alliesInSight = creatures.filter((creature) => creature.faction.id === this.faction.id && creature !== this);
-    const fertileAlliesInSight = alliesInSight.filter((creature) => creature.fertility > 90);
-    const closestFertileAlly = this.findClosest(fertileAlliesInSight);
-
-    const closestFood = this.findClosest(foods);
-
-    const choices = [
-      {
-        name: "breed",
-        value: closestFertileAlly
-          ? (this.fertility * (this.priorities.breeding / 100) ** 3) /
-            this.getRelativePositionTo(closestFertileAlly).distance
-          : 0,
-        proposedAngle: this.getRelativePositionTo(closestFertileAlly).angle,
-      },
-      {
-        name: "eat",
-        value: closestFood
-          ? (this.hunger * (this.priorities.food / 100) ** 3) / this.getRelativePositionTo(closestFood).distance
-          : 0,
-        proposedAngle: this.getRelativePositionTo(closestFood).angle,
-      },
-      {
-        name: "attack",
-        value: closestEnemy
-          ? (((this.currentHP / closestEnemy.currentHP) *
-              (this.currentHP / this.stats.maxHP) *
-              (this.priorities.aggression / 100) ** 3 *
-              50) /
-              this.getRelativePositionTo(closestEnemy).distance) *
-            this.faction.coefficients[closestEnemy.faction.name]
-          : 0,
-        proposedAngle: this.getRelativePositionTo(closestEnemy).angle,
-      },
-      // {
-      //   name: "run",
-      //   value: closestEnemy
-      //     ? ((closestEnemy.currentHP / this.currentHP) * (this.priorities.safety / 100) ** 3 * 50) /
-      //       this.getRelativePositionTo(closestEnemy).distance /
-      //       this.faction.coefficients[closestEnemy.faction.name]
-      //     : 0,
-      //   proposedAngle: this.getRelativePositionTo(closestEnemy).angle + Math.PI,
-      // },
-    ];
-
-    this.moveAngle = choices.reduce((a, b) => (a.value > b.value ? a : b)).proposedAngle;
-
-    if (this.moveAngle === 0) {
-      this.moveAngle = Math.random() * 2 * Math.PI;
-    }
   }
 
   findClosest<T extends Entity>(entities: T[]) {
     if (!entities.length) return null;
     return entities.reduce((prev, curr) =>
-      this.getRelativePositionTo(prev).distance < this.getRelativePositionTo(curr).distance ? prev : curr
+      this.getRelativePositionTo(prev).distance <
+      this.getRelativePositionTo(curr).distance
+        ? prev
+        : curr
     );
   }
 
   dealDamageTo(creature: Creature, secondsPassed: number) {
-    creature.takeDamage(this.stats.damage * secondsPassed * this.faction.coefficients[creature.faction.name]);
+    creature.takeDamage(
+      this.stats.damage *
+        secondsPassed *
+        this.faction.coefficients[creature.faction.name]
+    );
     creature.registerAttack();
   }
 
@@ -238,20 +161,5 @@ export class Creature extends Entity {
   eatFood() {
     this.hunger = Math.max(this.hunger - 30, 0);
     this.heal(100);
-  }
-
-  updateGameStats() {
-    document.getElementById(`${this.faction.name} Max HP`)!.innerText = Math.round(this.stats.maxHP).toString();
-    document.getElementById(`${this.faction.name} Regen`)!.innerText = Math.round(this.stats.regen).toString();
-    document.getElementById(`${this.faction.name} Damage`)!.innerText = Math.round(this.stats.damage).toString();
-    document.getElementById(`${this.faction.name} Speed`)!.innerText = Math.round(this.stats.speed).toString();
-    document.getElementById(`${this.faction.name} Aggression`)!.innerText = Math.round(
-      this.priorities.aggression
-    ).toString();
-    // document.getElementById(`${this.faction.name} Safety`)!.innerText = Math.round(this.priorities.safety).toString();
-    document.getElementById(`${this.faction.name} Breeding`)!.innerText = Math.round(
-      this.priorities.breeding
-    ).toString();
-    document.getElementById(`${this.faction.name} Food`)!.innerText = Math.round(this.priorities.food).toString();
   }
 }

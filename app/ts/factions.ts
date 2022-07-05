@@ -1,68 +1,71 @@
 import { factionType } from "./types";
 
+import { FACTION_DANGER_RATE } from "./utils/constants";
+
 export const red: factionType = {
-  id: 1,
+  id: 0,
   name: "red",
-  color: "#df4040",
+  colors: {
+    "1": "#822020",
+    "1.1": "#8f2525",
+    "1.2": "#9a2929",
+    "1.3": "#a42f2f",
+    "1.4": "#ac3838",
+    "1.5": "#b44444",
+    "1.6": "#bd5151",
+    "1.7": "#c35e5e",
+    "1.8": "#c86868",
+    "1.9": "#cb7373",
+  },
   coefficients: {
     red: 1,
-    gold: 1.2,
-    green: 1.1,
-    blue: 0.9,
-    pink: 0.8,
-  },
-};
-
-export const gold: factionType = {
-  id: 2,
-  name: "gold",
-  color: "#d1b950",
-  coefficients: {
-    red: 0.8,
-    gold: 1,
-    green: 1.2,
-    blue: 1.1,
-    pink: 0.9,
+    green: FACTION_DANGER_RATE,
+    blue: 1,
   },
 };
 
 export const green: factionType = {
-  id: 3,
+  id: 1,
   name: "green",
-  color: "#6acf6f",
+  colors: {
+    "1": "#1e7522",
+    "1.1": "#217f26",
+    "1.2": "#258a2a",
+    "1.3": "#2a932f",
+    "1.4": "#2f9b34",
+    "1.5": "#36a33b",
+    "1.6": "#3fac44",
+    "1.7": "#48b24d",
+    "1.8": "#50b455",
+    "1.9": "#59ba5e",
+  },
   coefficients: {
-    red: 0.9,
-    gold: 0.8,
+    red: 1,
     green: 1,
-    blue: 1.2,
-    pink: 1.1,
+    blue: FACTION_DANGER_RATE,
   },
 };
 
 export const blue: factionType = {
-  id: 4,
+  id: 2,
   name: "blue",
-  color: "#328dc2",
+  colors: {
+    "1": "#174a67",
+    "1.1": "#195171",
+    "1.2": "#1c597c",
+    "1.3": "#1f6085",
+    "1.4": "#24678e",
+    "1.5": "#2c729a",
+    "1.6": "#357ca5",
+    "1.7": "#3e85ae",
+    "1.8": "#498db5",
+    "1.9": "#5595ba",
+  },
   coefficients: {
-    red: 1.1,
-    gold: 0.9,
-    green: 0.8,
+    red: FACTION_DANGER_RATE,
+    green: 1,
     blue: 1,
-    pink: 1.2,
   },
 };
 
-export const pink: factionType = {
-  id: 5,
-  name: "pink",
-  color: "#8d4b8f",
-  coefficients: {
-    red: 1.2,
-    gold: 1.1,
-    green: 0.9,
-    blue: 0.8,
-    pink: 1,
-  },
-};
-
-export const factions = [red, gold, green, blue, pink];
+export const factions = [red, green, blue];

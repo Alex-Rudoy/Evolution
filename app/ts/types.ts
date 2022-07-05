@@ -3,6 +3,7 @@ export type creatureStatsType = {
   regen: number;
   speed: number;
   damage: number;
+  sightRadius: number;
 };
 
 export type creaturePrioritiesType = {
@@ -20,13 +21,11 @@ export type colliderType = {
 
 export type factionType = {
   id: number;
-  name: "red" | "gold" | "green" | "blue" | "pink";
-  color: string;
+  name: "red" | "green" | "blue";
+  colors: Record<string, string>;
   coefficients: {
     red: number;
-    gold: number;
     green: number;
     blue: number;
-    pink: number;
   };
 };
