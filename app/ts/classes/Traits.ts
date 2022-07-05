@@ -40,9 +40,9 @@ export class Traits {
       Object.keys(this.traits).forEach((trait) => {
         if (Math.random() > 0.5) {
           this.traits[trait as keyof typeof this.traits] = randomBetween(
-            1,
-            2,
-            0.1
+            0,
+            3,
+            1
           );
         }
       });
@@ -53,9 +53,9 @@ export class Traits {
     Object.keys(this.traits).forEach((trait) => {
       if (Math.random() < 0.001) {
         this.traits[trait as keyof typeof this.traits] = randomBetween(
-          1,
-          2,
-          0.1
+          0,
+          10,
+          1
         );
       }
     });

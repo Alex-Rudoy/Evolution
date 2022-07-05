@@ -16,7 +16,7 @@ export class Brain {
   }
 
   makeDecision(creatures: Creature[], foods: Food[]) {
-    const closestEnemies = this.fillToFive(
+    const closestEnemies = this.fillToThree(
       this.getClosest(
         creatures.filter(
           (creature) => creature.faction !== this.creature.faction
@@ -24,7 +24,7 @@ export class Brain {
       )
     );
 
-    const closestAllies = this.fillToFive(
+    const closestAllies = this.fillToThree(
       this.getClosest(
         creatures.filter(
           (creature) => creature.faction === this.creature.faction
@@ -32,120 +32,100 @@ export class Brain {
       )
     );
 
-    const closestFood = this.fillToFive(this.getClosest(foods));
+    const closestFood = this.fillToThree(this.getClosest(foods));
 
     this.currentSituation = "";
 
-    for (let i = 100; i <= DEFAULT_MAX_HP * 2; i += 100) {
-      this.addParam(this.creature.currentHP >= i);
-    }
-    for (let i = DEFAULT_DAMAGE; i <= DEFAULT_DAMAGE * 2; i += 30) {
-      this.addParam(this.creature.stats.damage >= i);
-    }
-    for (let i = 0; i <= 30; i += 3) {
-      this.addParam(this.creature.age >= i);
-    }
-    for (let i = 0; i <= 200; i += 20) {
-      this.addParam(this.creature.hunger >= i);
-    }
-    for (let i = 0; i <= 200; i += 30) {
-      this.addParam(this.creature.fertility >= i);
-    }
+    this.addRatioParam(this.creature.currentHP, 200);
+    this.addRatioParam(this.creature.stats.damage, 60);
+    this.addRatioParam(this.creature.age, 5);
+    this.addRatioParam(this.creature.hunger, 30);
+    this.addRatioParam(this.creature.fertility, 50);
 
     closestEnemies.forEach((enemy, idx) => {
-      this.currentSituation += ` enemy${idx}`;
-      this.addParam(!!enemy); // is present, just in case
-      for (let i = 100; i <= DEFAULT_MAX_HP * 2; i += 100) {
-        if (!enemy) this.addParam(false);
-        else this.addParam((enemy as Creature).currentHP >= i);
+      this.addParam(` enemy${idx}`);
+      if (!enemy) {
+        this.addParam("hp00dmg00age00hun00ang00dis00spe0");
+        return;
       }
-      for (let i = DEFAULT_DAMAGE; i <= DEFAULT_DAMAGE * 2; i += 30) {
-        if (!enemy) this.addParam(false);
-        else this.addParam((enemy as Creature).stats.damage >= i);
-      }
-      for (let i = 0; i <= 30; i += 3) {
-        if (!enemy) this.addParam(false);
-        else this.addParam((enemy as Creature).age >= i);
-      }
-      for (let i = 0; i <= 200; i += 20) {
-        if (!enemy) this.addParam(false);
-        else this.addParam((enemy as Creature).hunger >= i);
-      }
-      for (let i = 0; i <= 200; i += 30) {
-        if (!enemy) this.addParam(false);
-        else this.addParam((enemy as Creature).fertility >= i);
-      }
-      if (!enemy) this.addParam(false);
-      else
-        this.addParam(
-          (enemy as Creature).faction.coefficients[
-            this.creature.faction.name
-          ] === 2 // is dangerous!
-        );
-      if (!enemy) this.addParam(false);
-      else
-        this.addParam(
-          this.creature.stats.speed > (enemy as Creature).stats.speed
-        );
+
+      this.addParam("hp");
+      this.addRatioParam(
+        (enemy as Creature).currentHP /
+          this.creature.faction.coefficients[(enemy as Creature).faction.name],
+        200
+      );
+
+      this.addParam("dmg");
+      this.addRatioParam(
+        (enemy as Creature).stats.damage *
+          (enemy as Creature).faction.coefficients[this.creature.faction.name],
+        60
+      );
+
+      this.addParam("age");
+      this.addRatioParam((enemy as Creature).age, 5);
+
+      this.addParam("hun");
+      this.addRatioParam((enemy as Creature).hunger, 30);
 
       const position = this.creature.getRelativePositionTo(enemy);
-      for (let i = 0; i <= 9; i += 1) {
-        if (!enemy) this.addParam(false);
-        else this.addParam(position.angle === i);
-      }
-      for (let i = 0; i <= 300; i += 30) {
-        if (!enemy) this.addParam(false);
-        else this.addParam(position.distance >= i);
-      }
+      this.addParam("ang");
+      this.addRatioParam(position.angle, 1);
+
+      this.addParam("dis");
+      this.addRatioParam(position.distance, 60);
+
+      this.addParam("spe");
+      this.addParam(
+        `${+(this.creature.stats.speed > (enemy as Creature).stats.speed)}`
+      );
     });
 
     closestAllies.forEach((ally, idx) => {
-      this.currentSituation += ` ally${idx}`;
-      this.addParam(!!ally); // is present, just in case
-      for (let i = 100; i <= DEFAULT_MAX_HP * 2; i += 100) {
-        if (!ally) this.addParam(false);
-        else this.addParam((ally as Creature).currentHP >= i);
-      }
-      for (let i = DEFAULT_DAMAGE; i <= DEFAULT_DAMAGE * 2; i += 30) {
-        if (!ally) this.addParam(false);
-        else this.addParam((ally as Creature).stats.damage >= i);
-      }
-      for (let i = 0; i <= 30; i += 3) {
-        if (!ally) this.addParam(false);
-        else this.addParam((ally as Creature).age >= i);
-      }
-      for (let i = 0; i <= 200; i += 20) {
-        if (!ally) this.addParam(false);
-        else this.addParam((ally as Creature).hunger >= i);
-      }
-      for (let i = 0; i <= 180; i += 30) {
-        if (!ally) this.addParam(false);
-        else this.addParam((ally as Creature).fertility >= i);
+      this.addParam(` ally${idx}`);
+      if (!ally) {
+        this.addParam("hp00dmg00age00hun00fer00ang00dis00");
+        return;
       }
 
+      this.addParam("hp");
+      this.addRatioParam((ally as Creature).currentHP, 200);
+
+      this.addParam("dmg");
+      this.addRatioParam((ally as Creature).stats.damage, 60);
+
+      this.addParam("age");
+      this.addRatioParam((ally as Creature).age, 5);
+
+      this.addParam("hun");
+      this.addRatioParam((ally as Creature).hunger, 30);
+
+      this.addParam("fer");
+      this.addRatioParam((ally as Creature).fertility, 50);
+
       const position = this.creature.getRelativePositionTo(ally);
-      for (let i = 0; i <= 9; i += 1) {
-        if (!ally) this.addParam(false);
-        else this.addParam(position.angle === i);
-      }
-      for (let i = 0; i <= 300; i += 30) {
-        if (!ally) this.addParam(false);
-        else this.addParam(position.distance >= i);
-      }
+      this.addParam("ang");
+      this.addRatioParam(position.angle, 1);
+
+      this.addParam("dis");
+      this.addRatioParam(position.distance, 60);
     });
 
     closestFood.forEach((food, idx) => {
-      this.currentSituation += ` food${idx}`;
+      this.addParam(` food${idx}`);
+      if (!food) {
+        this.addParam("ang00dis00");
+        return;
+      }
       const position = this.creature.getRelativePositionTo(food);
-      for (let i = 0; i <= 9; i += 1) {
-        if (!food) this.addParam(false);
-        else this.addParam(position.angle === i);
-      }
-      for (let i = 0; i <= 300; i += 30) {
-        if (!food) this.addParam(false);
-        else this.addParam(position.distance >= i);
-      }
+      this.addParam("ang");
+      this.addRatioParam(position.angle, 1);
+
+      this.addParam("dis");
+      this.addRatioParam(position.distance, 60);
     });
+
     if (this.creature.genes.genes[this.currentSituation] === undefined) {
       this.creature.genes.genes[this.currentSituation] = randomBetween(
         0,
@@ -153,29 +133,38 @@ export class Brain {
         1
       );
     }
+    debouncedClg(this.currentSituation, this.currentSituation.length);
     this.creature.moveAngle = this.creature.genes.genes[this.currentSituation];
   }
 
   getClosest(entities: Entity[]) {
     return entities
+      .filter(
+        (entity) =>
+          this.creature.getRelativePositionTo(entity).distance <
+          this.creature.stats.sightRadius
+      )
       .sort(
         (entity1, entity2) =>
           entity1.getRelativePositionTo(this.creature).distance -
           entity2.getRelativePositionTo(this.creature).distance
       )
-      .slice(0, 5)
-      .filter(
-        (entity) =>
-          this.creature.getRelativePositionTo(entity).distance <
-          this.creature.stats.sightRadius
-      );
+      .slice(0, 3);
   }
 
-  fillToFive(entities: Entity[]) {
-    return [...entities, null, null, null, null, null].slice(0, 5);
+  fillToThree(entities: Entity[]) {
+    return [...entities, null, null, null, null, null].slice(0, 3);
   }
 
-  addParam(param: boolean): void {
-    this.currentSituation += param ? "1" : "0";
+  addRatioParam(param: number, ratio: number) {
+    this.addParam(
+      Math.round(param / ratio)
+        .toString()
+        .padStart(2, "0")
+    );
+  }
+
+  addParam(param: string): void {
+    this.currentSituation += param;
   }
 }

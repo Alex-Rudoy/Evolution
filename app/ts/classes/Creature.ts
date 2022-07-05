@@ -25,6 +25,7 @@ import {
 } from "../utils/constants";
 import { debouncedClg } from "../utils/debouncedClg";
 import { randomBetween } from "../utils/randomBetween";
+import { traitToRatio } from "../utils/traitToRatio";
 
 export class Creature extends Entity {
   faction: factionType;
@@ -73,16 +74,18 @@ export class Creature extends Entity {
     this.brain = new Brain(this);
 
     this.updateCollider({
-      hitbox: DEFAULT_CREATURE_HITBOX * this.traits.traits.vitality,
+      hitbox:
+        DEFAULT_CREATURE_HITBOX * traitToRatio(this.traits.traits.vitality),
       color: this.faction.colors[this.traits.traits.agility],
     });
 
     this.stats = {
-      maxHP: DEFAULT_MAX_HP * this.traits.traits.vitality,
-      regen: DEFAULT_REGEN * this.traits.traits.vitality,
-      damage: DEFAULT_DAMAGE * this.traits.traits.strength,
-      speed: DEFAULT_SPEED * this.traits.traits.agility,
-      sightRadius: DEFAULT_SIGHT_RADIUS * this.traits.traits.sense,
+      maxHP: DEFAULT_MAX_HP * traitToRatio(this.traits.traits.vitality),
+      regen: DEFAULT_REGEN * traitToRatio(this.traits.traits.vitality),
+      damage: DEFAULT_DAMAGE * traitToRatio(this.traits.traits.strength),
+      speed: DEFAULT_SPEED * traitToRatio(this.traits.traits.agility),
+      sightRadius:
+        DEFAULT_SIGHT_RADIUS * traitToRatio(this.traits.traits.sense),
     };
     this.moveAngle = 0;
     this.currentHP = this.stats.maxHP;

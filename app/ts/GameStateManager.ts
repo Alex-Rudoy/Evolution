@@ -2,7 +2,8 @@ import { Creature } from "./classes/Creature";
 import { Food } from "./classes/Food";
 import { factions } from "./factions";
 
-import { DEFAULT_HUNGER_RATE } from "./utils/constants";
+import { DEFAULT_HUNGER_RATE, DEG_36 } from "./utils/constants";
+import { traitToRatio } from "./utils/traitToRatio";
 
 export default class GameStateManager {
   creatures: Creature[];
@@ -13,6 +14,7 @@ export default class GameStateManager {
   totalTime: number;
   fullSeconds: number;
   epoch: number;
+  loading: boolean;
 
   constructor() {
     this.creatures = [];
@@ -23,11 +25,13 @@ export default class GameStateManager {
     this.totalTime = 0;
     this.fullSeconds = 0;
     this.epoch = 0;
+    this.loading = true;
 
     this.start();
   }
 
   start() {
+    this.loading = true;
     this.creatures = [];
     this.foods = [];
 
@@ -58,9 +62,13 @@ export default class GameStateManager {
       });
     }
     this.epoch++;
+    this.totalTime = 0;
+    this.fullSeconds = 0;
+    this.loading = false;
   }
 
   loop(secondsPassed: number) {
+    if (this.loading) return;
     this.totalTime += secondsPassed;
     this.makeDecisions();
     this.move(secondsPassed);
@@ -88,10 +96,13 @@ export default class GameStateManager {
 
   move(secondsPassed: number) {
     this.creatures.forEach((creature) => {
-      creature.move(creature.moveAngle, creature.stats.speed * secondsPassed);
+      creature.move(
+        creature.moveAngle * DEG_36,
+        creature.stats.speed * secondsPassed
+      );
     });
     this.foods.forEach((food) => {
-      food.move(food.moveAngle, 10 * secondsPassed);
+      food.move(food.moveAngle * DEG_36, 10 * secondsPassed);
     });
   }
 
@@ -152,10 +163,10 @@ export default class GameStateManager {
       creature.hunger +=
         secondsPassed *
         DEFAULT_HUNGER_RATE *
-        creature.traits.traits.agility ** 2 *
-        creature.traits.traits.vitality ** 2 *
-        creature.traits.traits.strength ** 2 *
-        creature.traits.traits.sense ** 1.5;
+        traitToRatio(creature.traits.traits.agility) ** 2 *
+        traitToRatio(creature.traits.traits.vitality) ** 2 *
+        traitToRatio(creature.traits.traits.strength) ** 2 *
+        traitToRatio(creature.traits.traits.sense) ** 1.5;
       creature.age += secondsPassed;
       creature.fertility += secondsPassed * 15;
       creature.heal(creature.stats.regen * secondsPassed);
@@ -201,6 +212,8 @@ export default class GameStateManager {
       this.fullSeconds++;
       if (Math.random() + 0.3 > this.creatures.length / 100) {
         // more population - less food
+        this.foods.push(new Food());
+        this.foods.push(new Food());
         this.foods.push(new Food());
       }
     }

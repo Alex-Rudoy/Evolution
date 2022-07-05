@@ -1,6 +1,6 @@
 import { colliderType } from "../types";
 
-import { DEG_36, FIELD_HEIGHT, FIELD_WIDTH } from "../utils/constants";
+import { DEG_36, DEG_360, FIELD_HEIGHT, FIELD_WIDTH } from "../utils/constants";
 import { debouncedClg } from "../utils/debouncedClg";
 import { mod } from "../utils/mod";
 
@@ -43,11 +43,6 @@ export default class Entity {
   }
 
   collidesWith(entity: Entity) {
-    if (
-      this.getRelativePositionTo(entity).distance <
-      this.collider.hitbox + entity.collider.hitbox
-    )
-      debouncedClg(this, entity);
     return (
       this.getRelativePositionTo(entity).distance <
       this.collider.hitbox + entity.collider.hitbox
@@ -66,7 +61,7 @@ export default class Entity {
     if (deltaX < -FIELD_WIDTH / 2) deltaX += FIELD_WIDTH; // -1400 -> 200
 
     return {
-      angle: Math.floor(Math.atan2(deltaY, deltaX) / DEG_36),
+      angle: Math.floor(mod(Math.atan2(deltaY, deltaX), DEG_360) / DEG_36),
       distance: Math.sqrt(deltaY ** 2 + deltaX ** 2),
     };
   }

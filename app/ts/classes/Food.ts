@@ -6,6 +6,7 @@ import {
   FIELD_HEIGHT,
   FIELD_WIDTH,
 } from "../utils/constants";
+import { randomBetween } from "../utils/randomBetween";
 
 export class Food extends Entity {
   moveAngle: number;
@@ -21,6 +22,6 @@ export class Food extends Entity {
       DEFAULT_FOOD_HITBOX,
       "#fff891"
     );
-    this.moveAngle = Math.random() * 2 * Math.PI;
+    this.moveAngle = randomBetween(0, 10, 1);
   }
 }
