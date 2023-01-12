@@ -1,9 +1,11 @@
-import "./scss/main.scss";
 import GameStateManager from "./ts/GameStateManager";
+
+import "./scss/main.scss";
+
+// time variables
 
 const gameStateManager = new GameStateManager();
 
-// time variables
 let secondsPassed = 0;
 let prevTime = 0;
 
@@ -16,7 +18,7 @@ function gameLoop(time?: number) {
   if (isNaN(secondsPassed)) secondsPassed = 0.016;
   prevTime = time || 0;
 
-  gameStateManager.loop(secondsPassed);
+  // gameStateManager.loop(secondsPassed);
 }
 
 gameLoop();

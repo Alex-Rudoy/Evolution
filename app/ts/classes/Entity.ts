@@ -1,38 +1,78 @@
-import { colliderType } from "../types";
+import { Vector } from "./Vector";
+
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../utils/constants";
+import { randomBetween } from "../utils/randomBetween";
 
 export default class Entity {
-  collider: colliderType;
+  position: Vector;
+  velocity: Vector;
+  color: string;
+  size: number;
   toDestroy: boolean = false;
 
-  constructor(x: number, y: number, hitbox: number, color: string) {
-    this.collider = { x, y, hitbox, color: color };
+  constructor({
+    x,
+    y,
+    velocityX,
+    velocityY,
+    size,
+    color,
+  }: {
+    x?: number;
+    y?: number;
+    velocityX?: number;
+    velocityY?: number;
+    size: number;
+    color: string;
+  }) {
+    this.position = new Vector(
+      x || randomBetween(0, CANVAS_WIDTH),
+      y || randomBetween(0, CANVAS_HEIGHT)
+    );
+    this.velocity = new Vector(
+      velocityX || randomBetween(-5, 5),
+      velocityY || randomBetween(-5, 5)
+    );
+    this.size = size;
+    this.color = color;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
-    ctx.arc(this.collider.x, this.collider.y, this.collider.hitbox, 0, Math.PI * 2, true);
-    ctx.fillStyle = this.collider.color;
+    ctx.arc(this.position.x, this.position.y, this.size, 0, Math.PI * 2, true);
+    ctx.fillStyle = this.color;
     ctx.fill();
     ctx.closePath();
   }
 
-  move(angle: number, distance: number) {
-    this.collider.x = Math.max(Math.min(this.collider.x + Math.cos(angle) * distance, 1590), 10);
-    this.collider.y = Math.max(Math.min(this.collider.y + Math.sin(angle) * distance, 890), 10);
+  forceMove(v: Vector) {
+    this.position = this.position.add(v);
+  }
+
+  move(secondsPassed: number) {
+    this.position = this.position.add(this.velocity.multiplyBy(secondsPassed));
+    if (this.position.x > CANVAS_WIDTH) this.position.x -= CANVAS_WIDTH;
+    if (this.position.x < 0) this.position.x += CANVAS_WIDTH;
+    if (this.position.y > CANVAS_HEIGHT) this.position.y -= CANVAS_HEIGHT;
+    if (this.position.y < 0) this.position.y += CANVAS_HEIGHT;
+  }
+
+  accelerate(acceleration: Vector) {
+    this.velocity = this.velocity.add(acceleration);
   }
 
   collidesWith(entity: Entity) {
-    if (this.getRelativePositionTo(entity).distance < this.collider.hitbox + entity.collider.hitbox) {
-      return true;
-    }
-    return false;
+    if (entity === this) return false;
+    return this.getVectorTo(entity).length < this.size + entity.size;
   }
 
-  getRelativePositionTo(entity: Entity | null) {
-    if (!entity) return { angle: 0, distance: 0 };
-    return {
-      angle: Math.atan2(entity.collider.y - this.collider.y, entity.collider.x - this.collider.x),
-      distance: Math.sqrt((this.collider.x - entity.collider.x) ** 2 + (this.collider.y - entity.collider.y) ** 2),
-    };
+  getVectorTo(entity: Entity | null): Vector {
+    if (!entity) return new Vector(0, 0);
+    const vectorTo = entity.position.subtract(this.position);
+    if (vectorTo.x > CANVAS_WIDTH / 2) vectorTo.x -= CANVAS_WIDTH;
+    if (vectorTo.x < -CANVAS_WIDTH / 2) vectorTo.x += CANVAS_WIDTH;
+    if (vectorTo.y > CANVAS_HEIGHT / 2) vectorTo.y -= CANVAS_HEIGHT;
+    if (vectorTo.y < -CANVAS_HEIGHT / 2) vectorTo.y += CANVAS_HEIGHT;
+    return vectorTo;
   }
 }

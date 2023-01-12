@@ -1,19 +1,20 @@
-import Entity from "./Entity";
 import { Creature } from "./Creature";
+import Entity from "./Entity";
+
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../utils/constants";
+import { randomBetween } from "../utils/randomBetween";
 
 export class Food extends Entity {
-  moveAngle: number;
-
   constructor(deadCreature?: Creature) {
-    const x = Math.random() * 1600;
-    const y = Math.random() * 900;
-    const hitbox = 5;
-    super(
-      deadCreature ? deadCreature.collider.x + Math.random() * 30 - 15 : x,
-      deadCreature ? deadCreature.collider.y + Math.random() * 30 - 15 : y,
-      hitbox,
-      "#fff891"
-    );
-    this.moveAngle = Math.random() * 2 * Math.PI;
+    super({
+      x: deadCreature
+        ? deadCreature.position.x + randomBetween(-15, 15)
+        : undefined,
+      y: deadCreature
+        ? deadCreature.position.y + randomBetween(-15, 15)
+        : undefined,
+      size: 5,
+      color: "#fff891",
+    });
   }
 }
