@@ -1,6 +1,11 @@
 import { Vector } from "./Vector";
 
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../utils/constants";
+import {
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  HALF_CANVAS_HEIGHT,
+  HALF_CANVAS_WIDTH,
+} from "../utils/constants";
 import { randomBetween } from "../utils/randomBetween";
 
 export default class Entity {
@@ -10,21 +15,7 @@ export default class Entity {
   size: number;
   toDestroy: boolean = false;
 
-  constructor({
-    x,
-    y,
-    velocityX,
-    velocityY,
-    size,
-    color,
-  }: {
-    x?: number;
-    y?: number;
-    velocityX?: number;
-    velocityY?: number;
-    size: number;
-    color: string;
-  }) {
+  constructor({ x, y, velocityX, velocityY, size, color }: constructorProps) {
     this.position = new Vector(
       x || randomBetween(0, CANVAS_WIDTH),
       y || randomBetween(0, CANVAS_HEIGHT)
@@ -69,10 +60,19 @@ export default class Entity {
   getVectorTo(entity: Entity | null): Vector {
     if (!entity) return new Vector(0, 0);
     const vectorTo = entity.position.subtract(this.position);
-    if (vectorTo.x > CANVAS_WIDTH / 2) vectorTo.x -= CANVAS_WIDTH;
-    if (vectorTo.x < -CANVAS_WIDTH / 2) vectorTo.x += CANVAS_WIDTH;
-    if (vectorTo.y > CANVAS_HEIGHT / 2) vectorTo.y -= CANVAS_HEIGHT;
-    if (vectorTo.y < -CANVAS_HEIGHT / 2) vectorTo.y += CANVAS_HEIGHT;
+    if (vectorTo.x > HALF_CANVAS_WIDTH) vectorTo.x -= CANVAS_WIDTH;
+    if (vectorTo.x < -HALF_CANVAS_WIDTH) vectorTo.x += CANVAS_WIDTH;
+    if (vectorTo.y > HALF_CANVAS_HEIGHT) vectorTo.y -= CANVAS_HEIGHT;
+    if (vectorTo.y < -HALF_CANVAS_HEIGHT) vectorTo.y += CANVAS_HEIGHT;
     return vectorTo;
   }
 }
+
+type constructorProps = {
+  x?: number;
+  y?: number;
+  velocityX?: number;
+  velocityY?: number;
+  size: number;
+  color: string;
+};

@@ -9,13 +9,14 @@
   <body>
     <div class="wrapper">
       <div class="game">
-        <canvas width="1600" height="900"></canvas>
+        <canvas width="1600" height="900" id="field"></canvas>
       </div>
       <div class="infoContainer">
+        <canvas id="chart" width="300" height="300"></canvas>
         <p>Generation: <span id="generation">0</span></p>
         <input id="skipAmount" value="10" />
-        <button id="skipButton">Skip 10 generations</button>
-        <p class="skip_explain">1 genegation takes ~ 2-3 sec</p>
+        <button id="skipButton">Skip 100 generations</button>
+        <p class="skip_explain">Skipping 100 genegations will take 3-5min</p>
       </div>
     </div>
   </body>

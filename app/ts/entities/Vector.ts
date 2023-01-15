@@ -17,6 +17,17 @@ export class Vector {
     return Math.atan2(this.y, this.x);
   }
 
+  setLength(l: number) {
+    this.x = l * Math.cos(this.angle);
+    this.y = l * Math.sin(this.angle);
+  }
+
+  setAngle(a: number) {
+    const length = this.length;
+    this.x = length * Math.cos(a);
+    this.y = length * Math.sin(a);
+  }
+
   get directions(): number[] {
     const directions = new Array(10).fill(0);
     const sector = Math.floor(this.angle / TENTH_OF_CIRCLE);
@@ -38,16 +49,5 @@ export class Vector {
 
   divideBy(n: number): Vector {
     return new Vector(this.x / n, this.y / n);
-  }
-
-  setLength(l: number) {
-    this.x = l * Math.cos(this.angle);
-    this.y = l * Math.sin(this.angle);
-  }
-
-  setAngle(a: number) {
-    const length = this.length;
-    this.x = length * Math.cos(a);
-    this.y = length * Math.sin(a);
   }
 }

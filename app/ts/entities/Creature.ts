@@ -2,11 +2,10 @@ import { Brain } from "./Brain";
 import Entity from "./Entity";
 import { Food } from "./Food";
 import { Vector } from "./Vector";
-import { factionType } from "../types";
 
 import { clamp } from "../utils/clamp";
 import { TENTH_OF_CIRCLE } from "../utils/constants";
-import { factions } from "../utils/factions";
+import { factions, factionType } from "../utils/factions";
 
 export class Creature extends Entity {
   brain: Brain;
@@ -18,12 +17,13 @@ export class Creature extends Entity {
   age: number;
   energy: number;
   attackedTimeout: number;
+  isSelected: boolean;
 
-  constructor({ parent, faction }: constructorProps) {
+  constructor({ parent, faction, mutate }: constructorProps) {
     if (parent) {
       super({ color: parent.faction.color, size: 10 });
       this.faction = parent.faction;
-      this.brain = new Brain({ parentBrain: parent.brain, me: this });
+      this.brain = new Brain({ parentBrain: parent.brain, me: this, mutate });
     } else {
       if (!faction) {
         throw new Error("faction is required");
@@ -40,6 +40,8 @@ export class Creature extends Entity {
     this.age = 0;
     this.energy = 100;
     this.attackedTimeout = 0;
+
+    this.isSelected = false;
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
@@ -58,22 +60,53 @@ export class Creature extends Entity {
     ctx.fillStyle = "#111";
     ctx.fill();
     ctx.closePath();
+
+    if (this.isSelected) {
+      ctx.beginPath();
+      ctx.arc(
+        this.position.x,
+        this.position.y,
+        this.size + 1,
+        0,
+        Math.PI * 2,
+        true
+      );
+      ctx.strokeStyle = "#fff";
+      ctx.stroke();
+
+      this.brain.drawConnections(ctx);
+    }
   }
 
-  tick(secondsPassed: number) {
+  updateValuesPerTick(secondsPassed: number) {
+    this.energy = Math.max(this.energy - secondsPassed * 20, 0);
+    this.age += secondsPassed;
+    if (this.isSelected) {
+      console.log(this.age);
+    }
+    const hpPromille = this.maxHP / 1000; // 0.1% of maxHP - will be just 1 HP with default HP
+    const energyDeficit = 100 - this.energy;
+    this.takeDamage(this.age * 5 * secondsPassed * hpPromille); // 0.5% maxHP per second, per 1 second of age
+    this.takeDamage((energyDeficit / 2) * secondsPassed * hpPromille); // 5% maxHP per second at 0 energy
+    this.takeDamage((energyDeficit / 2) * secondsPassed); // flat 50 damage per second at 0 energy
     if (this.attackedTimeout) {
       this.attackedTimeout = clamp(this.attackedTimeout - secondsPassed, 0, 1);
     }
   }
 
-  makeDecision(cretures: Creature[], foods: Food[], secondsPassed: number) {
-    const direction = this.brain.makeDecision(cretures, foods);
+  makeDecision(
+    cretures: Creature[],
+    foods: Food[],
+    secondsPassed: number,
+    ctx: CanvasRenderingContext2D
+  ) {
+    const direction = this.brain.makeDecision(cretures, foods, ctx);
     // direction is 1/10 of a circle
     // add acceleration vector to velocity
     const accelerationVector = new Vector(0, 0);
     accelerationVector.setLength(
-      Math.min(this.maxSpeed * secondsPassed, this.maxSpeed / 2)
-    ); // can get to max speed in 1 second
+      Math.min(this.maxSpeed * 4 * secondsPassed, this.maxSpeed / 2)
+    ); // can get to max speed in 0.25 second
     accelerationVector.setAngle(direction * TENTH_OF_CIRCLE);
     this.velocity = this.velocity.add(accelerationVector);
     if (this.velocity.length > this.maxSpeed) {
@@ -103,7 +136,7 @@ export class Creature extends Entity {
   }
 
   eatFood() {
-    this.energy = Math.max(this.energy + 30, 100);
+    this.energy = clamp(this.energy + 30, 0, 100);
     this.heal(200);
   }
 
@@ -112,12 +145,8 @@ export class Creature extends Entity {
   }
 }
 
-type constructorProps =
-  | {
-      parent: Creature;
-      faction?: undefined;
-    }
-  | {
-      parent?: undefined;
-      faction: factionType;
-    };
+type constructorProps = {
+  parent?: Creature;
+  mutate?: boolean;
+  faction: factionType;
+};

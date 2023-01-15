@@ -1,4 +1,4 @@
-import GameStateManager from "./ts/GameStateManager";
+import GameStateManager from "./ts/managers/GameStateManager";
 
 import "./scss/main.scss";
 
@@ -18,7 +18,7 @@ function gameLoop(time?: number) {
   if (isNaN(secondsPassed)) secondsPassed = 0.016;
   prevTime = time || 0;
 
-  // gameStateManager.loop(secondsPassed);
+  gameStateManager.loop(secondsPassed);
 }
 
 gameLoop();
