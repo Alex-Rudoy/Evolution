@@ -1,7 +1,7 @@
-import { Creature } from "../entities/Creature";
+import { Creature } from '../entities/Creature';
 
-import { factionType } from "../utils/factions";
-import { weightedRandomIndex } from "../utils/weightedRandomIndex";
+import { factionType } from '../utils/factions';
+import { weightedRandomIndex } from '../utils/weightedRandomIndex';
 
 export class Graveyard {
   red: Creature[];

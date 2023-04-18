@@ -1,8 +1,8 @@
-import { Brain } from "./Brain";
+import { Brain } from './Brain';
 
-import { MUTATION_RATE } from "../utils/constants";
-import { randomBetween } from "../utils/randomBetween";
-import { sigmoid } from "../utils/sigmoid";
+import { MUTATION_RATE } from '../utils/constants';
+import { randomBetween } from '../utils/randomBetween';
+import { sigmoid } from '../utils/sigmoid';
 
 export class Layer {
   weights: number[][];
@@ -23,7 +23,7 @@ export class Layer {
       if (mutate) this.mutate();
     } else {
       if (!inputSize || !outputSize) {
-        throw new Error("inputSize and outputSize are required");
+        throw new Error('inputSize and outputSize are required');
       }
       this.weights = [];
       this.biases = [];
@@ -39,19 +39,15 @@ export class Layer {
   }
 
   mutate() {
-    this.weights.forEach((neuronWeights) => {
-      neuronWeights.forEach((_, i) => {
-        if (Math.random() < MUTATION_RATE) {
-          neuronWeights[i] = randomBetween(-4, 4);
-        }
-      });
-    });
+    this.weights = this.weights.map((neuronWeights) =>
+      neuronWeights.map((weight) =>
+        Math.random() < MUTATION_RATE ? randomBetween(-4, 4) : weight,
+      ),
+    );
 
-    this.biases.forEach((_, i) => {
-      if (Math.random() < MUTATION_RATE) {
-        this.biases[i] = randomBetween(-2, 2);
-      }
-    });
+    this.biases = this.biases.map((bias) =>
+      Math.random() < MUTATION_RATE ? randomBetween(-2, 2) : bias,
+    );
   }
 
   calculate(inputs: number[]): number[] {
@@ -60,10 +56,9 @@ export class Layer {
     }
     return this.weights.map((neuronWeights, neuronIndex) =>
       sigmoid(
-        neuronWeights.reduce((acc, weight, i) => {
-          return acc + weight * inputs[i];
-        }, 0) + this.biases[neuronIndex]
-      )
+        neuronWeights.reduce((acc, weight, i) => acc + weight * inputs[i], 0) +
+          this.biases[neuronIndex],
+      ),
     );
   }
 }

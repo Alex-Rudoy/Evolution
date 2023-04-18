@@ -1,19 +1,15 @@
-import { ChartManager } from "./ChartManager";
-import { Graveyard } from "./Graveyard";
-import { Creature } from "../entities/Creature";
-import Entity from "../entities/Entity";
-import { Food } from "../entities/Food";
-import { Vector } from "../entities/Vector";
+import { ChartManager } from './ChartManager';
+import { Graveyard } from './Graveyard';
+import { Creature } from '../entities/Creature';
+import { Food } from '../entities/Food';
+import { Vector } from '../entities/Vector';
 
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   MAX_REASONABLE_TICK_TIME,
-} from "../utils/constants";
-import { deepCopy } from "../utils/deepCopy";
-import { delay } from "../utils/delay";
-import { blueFaction, greenFaction, redFaction } from "../utils/factions";
-import { weightedRandomIndex } from "../utils/weightedRandomIndex";
+} from '../utils/constants';
+import { blueFaction, greenFaction, redFaction } from '../utils/factions';
 
 export default class GameStateManager {
   generation: number;
@@ -33,17 +29,17 @@ export default class GameStateManager {
   constructor() {
     this.generation = 0;
     this.graveyard = new Graveyard();
-    this.canvas = document.getElementById("field") as HTMLCanvasElement;
-    this.ctx = this.canvas.getContext("2d")!;
+    this.canvas = document.getElementById('field') as HTMLCanvasElement;
+    this.ctx = this.canvas.getContext('2d')!;
     this.ctx.lineWidth = 2;
     this.isSkipActive = false;
     this.skipAmount = 100;
 
     this.skipButton = document.getElementById(
-      "skipButton"
+      'skipButton',
     ) as HTMLButtonElement;
     this.skipAmountInput = document.getElementById(
-      "skipAmount"
+      'skipAmount',
     ) as HTMLInputElement;
     this.skipAmountInput.value = this.skipAmount.toString();
 
@@ -61,9 +57,9 @@ export default class GameStateManager {
   }
 
   addEventListeners() {
-    this.skipButton.addEventListener("click", this.startSkip);
-    this.skipAmountInput.addEventListener("input", this.handleSkipAmountChange);
-    this.canvas.addEventListener("click", this.handleCanvasClick);
+    this.skipButton.addEventListener('click', this.startSkip);
+    this.skipAmountInput.addEventListener('input', this.handleSkipAmountChange);
+    this.canvas.addEventListener('click', this.handleCanvasClick);
   }
 
   start() {
@@ -72,8 +68,8 @@ export default class GameStateManager {
 
     [redFaction, greenFaction, blueFaction].forEach((faction) => {
       if (this.generation === 0) {
-        for (let i = 0; i < 30; i++) {
-          this.creatures.push(new Creature({ faction: faction }));
+        for (let i = 0; i < 15; i++) {
+          this.creatures.push(new Creature({ faction }));
         }
       } else {
         this.graveyard
@@ -84,18 +80,18 @@ export default class GameStateManager {
                 parent: creature,
                 mutate: false,
                 faction: creature.faction,
-              })
+              }),
             );
           });
 
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 10; i++) {
           // the older the creature, the higher chance it will be chosen
           this.creatures.push(
             new Creature({
               parent: this.graveyard.getRandomWeightedCreature(),
               mutate: true,
               faction,
-            })
+            }),
           );
         }
       }
@@ -111,7 +107,7 @@ export default class GameStateManager {
     if (this.isSkipActive) return;
     const limitedSecondsPassed = Math.min(
       secondsPassed,
-      MAX_REASONABLE_TICK_TIME
+      MAX_REASONABLE_TICK_TIME,
     );
     // const limitedSecondsPassed = MAX_REASONABLE_TICK_TIME;
     this.makeDecisions(limitedSecondsPassed);
@@ -125,12 +121,7 @@ export default class GameStateManager {
 
   makeDecisions(secondsPassed: number) {
     this.creatures.forEach((creature) => {
-      creature.makeDecision(
-        this.creatures,
-        this.foods,
-        secondsPassed,
-        this.ctx
-      );
+      creature.makeDecision(this.creatures, this.foods, secondsPassed);
     });
   }
 
@@ -202,7 +193,7 @@ export default class GameStateManager {
   moveUnitsAway(creature1: Creature, creature2: Creature) {
     const vectorBetween = creature1.getVectorTo(creature2);
     vectorBetween.setLength(
-      vectorBetween.length - creature1.size - creature2.size
+      vectorBetween.length - creature1.size - creature2.size,
     );
     creature1.forceMove(vectorBetween.divideBy(2));
     creature2.forceMove(vectorBetween.divideBy(-2));
@@ -223,7 +214,7 @@ export default class GameStateManager {
 
   increaseGenerationCount() {
     this.generation++;
-    document.getElementById("generation")!.innerText =
+    document.getElementById('generation')!.innerText =
       this.generation.toString();
   }
 
@@ -268,7 +259,7 @@ export default class GameStateManager {
     this.creatures.sort(
       (a, b) =>
         a.position.subtract(new Vector(clickX, clickY)).length -
-        b.position.subtract(new Vector(clickX, clickY)).length
+        b.position.subtract(new Vector(clickX, clickY)).length,
     )[0].isSelected = true;
   }
 }

@@ -1,4 +1,4 @@
-import { TENTH_OF_CIRCLE } from "../utils/constants";
+import { EIGTHS_OF_CIRCLE } from '../utils/constants';
 
 export class Vector {
   x: number;
@@ -23,14 +23,14 @@ export class Vector {
   }
 
   setAngle(a: number) {
-    const length = this.length;
+    const { length } = this;
     this.x = length * Math.cos(a);
     this.y = length * Math.sin(a);
   }
 
   get directions(): number[] {
     const directions = new Array(10).fill(0);
-    const sector = Math.floor(this.angle / TENTH_OF_CIRCLE);
+    const sector = Math.floor(this.angle / EIGTHS_OF_CIRCLE);
     directions[sector] = 1;
     return directions;
   }

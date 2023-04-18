@@ -1,12 +1,11 @@
-import { Creature } from "./Creature";
-import Entity from "./Entity";
-import { Food } from "./Food";
-import { Layer } from "./Layer";
+import { Creature } from './Creature';
+import Entity from './Entity';
+import { Food } from './Food';
+import { Layer } from './Layer';
 
 import {
   HIDDEN_LAYER_1_SIZE,
   HIDDEN_LAYER_2_SIZE,
-  HIDDEN_LAYER_3_SIZE,
   INPUT_LAYER_SIZE,
   OUTPUT_LAYER_SIZE,
   HIGHER_DAMAGE_COEF,
@@ -18,10 +17,14 @@ import {
   HALF_CANVAS_WIDTH,
   PERSONAL_INPUTS_COUNT,
   CREATURE_INPUTS_COUNT,
-} from "../utils/constants";
-import { negate } from "../utils/negate";
-import { norm } from "../utils/norm";
-import { weightedRandomIndex } from "../utils/weightedRandomIndex";
+  HALF_OF_CANVAS_DIAGONAL,
+  CLOSEST_CREATURE_COUNT,
+  CLOSEST_FOOD_COUNT,
+  HIDDEN_LAYER_3_SIZE,
+} from '../utils/constants';
+import { negate } from '../utils/negate';
+import { norm } from '../utils/norm';
+import { weightedRandomIndex } from '../utils/weightedRandomIndex';
 
 export class Brain {
   layers: Layer[] = [];
@@ -33,7 +36,7 @@ export class Brain {
     this.me = me;
     if (parentBrain) {
       this.layers = parentBrain.layers.map(
-        (parentLayer) => new Layer({ parentLayer, mutate, brain: this })
+        (parentLayer) => new Layer({ parentLayer, mutate, brain: this }),
       );
     } else {
       // creates random layers
@@ -50,6 +53,11 @@ export class Brain {
         }),
         new Layer({
           inputSize: HIDDEN_LAYER_2_SIZE,
+          outputSize: HIDDEN_LAYER_3_SIZE,
+          brain: this,
+        }),
+        new Layer({
+          inputSize: HIDDEN_LAYER_3_SIZE,
           outputSize: OUTPUT_LAYER_SIZE,
           brain: this,
         }),
@@ -66,30 +74,33 @@ export class Brain {
     this.closestCreatures.forEach((creature) => {
       inputs.push(norm(creature.currentHP, 0, 1000));
       inputs.push(norm(creature.energy, 0, 100));
-      inputs.push(norm(creature.age, 0, 20));
       inputs.push(
         +(
           creature.faction.coefficients[this.me.faction.name] ===
           HIGHER_DAMAGE_COEF
-        )
+        ),
       );
       inputs.push(
         +(
           creature.faction.coefficients[this.me.faction.name] ===
           SAME_FACTION_COEF
-        )
+        ),
       );
       inputs.push(
         +(
           creature.faction.coefficients[this.me.faction.name] ===
           LOWER_DAMAGE_COEF
-        )
+        ),
       );
       const vectorToCreature = this.me.getVectorTo(creature);
       inputs.push(negate(vectorToCreature.x / HALF_CANVAS_WIDTH));
       inputs.push(negate(vectorToCreature.y / HALF_CANVAS_HEIGHT));
+      inputs.push(negate(vectorToCreature.length / HALF_OF_CANVAS_DIAGONAL));
     });
-    while (inputs.length < PERSONAL_INPUTS_COUNT + CREATURE_INPUTS_COUNT) {
+    while (
+      inputs.length <
+      PERSONAL_INPUTS_COUNT + CREATURE_INPUTS_COUNT * CLOSEST_CREATURE_COUNT
+    ) {
       inputs.push(0);
     }
 
@@ -97,6 +108,7 @@ export class Brain {
       const vectorToFood = this.me.getVectorTo(food);
       inputs.push(negate(vectorToFood.x / HALF_CANVAS_WIDTH));
       inputs.push(negate(vectorToFood.y / HALF_CANVAS_HEIGHT));
+      inputs.push(1 - vectorToFood.length / HALF_OF_CANVAS_DIAGONAL);
     });
 
     while (inputs.length < INPUT_LAYER_SIZE) {
@@ -105,17 +117,13 @@ export class Brain {
     return inputs;
   }
 
-  makeDecision(
-    creatures: Creature[],
-    foods: Food[],
-    ctx: CanvasRenderingContext2D
-  ) {
+  makeDecision(creatures: Creature[], foods: Food[]) {
     this.findClosestCreatures(creatures);
     this.findClosestFood(foods);
     const inputs = this.generateInputData();
     const outputs = this.layers.reduce(
       (prev, layer) => layer.calculate(prev),
-      inputs
+      inputs,
     );
     if (this.me.isSelected) {
       console.log(outputs);
@@ -126,17 +134,17 @@ export class Brain {
   findClosestCreatures(creatures: Creature[]) {
     this.closestCreatures = creatures
       .sort(
-        (a, b) => this.me.getVectorTo(a).length - this.me.getVectorTo(b).length
+        (a, b) => this.me.getVectorTo(a).length - this.me.getVectorTo(b).length,
       )
-      .slice(1, 6);
+      .slice(1, CLOSEST_CREATURE_COUNT + 1);
   }
 
   findClosestFood(foods: Food[]) {
     this.closestFood = foods
       .sort(
-        (a, b) => this.me.getVectorTo(a).length - this.me.getVectorTo(b).length
+        (a, b) => this.me.getVectorTo(a).length - this.me.getVectorTo(b).length,
       )
-      .slice(0, 5);
+      .slice(0, CLOSEST_FOOD_COUNT);
   }
 
   drawConnections(ctx: CanvasRenderingContext2D) {
@@ -170,7 +178,7 @@ export class Brain {
     ctx.lineTo(entity.position.x + wrapX, entity.position.y + wrapY);
     ctx.moveTo(this.me.position.x - wrapX, this.me.position.y - wrapY);
     ctx.lineTo(entity.position.x, entity.position.y);
-    ctx.strokeStyle = "#fff";
+    ctx.strokeStyle = '#fff';
     ctx.stroke();
   }
 }

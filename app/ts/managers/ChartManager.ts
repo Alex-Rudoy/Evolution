@@ -1,7 +1,7 @@
-import { Chart, registerables } from "chart.js";
+import { Chart, registerables } from 'chart.js';
 
-import { Creature } from "../entities/Creature";
-import { Graveyard } from "./Graveyard";
+import { Graveyard } from './Graveyard';
+import { Creature } from '../entities/Creature';
 
 import {
   BLUE_FACTION_COLOR,
@@ -10,25 +10,25 @@ import {
   MAX_AGE_GREEN_COLOR,
   MAX_AGE_RED_COLOR,
   RED_FACTION_COLOR,
-} from "../utils/constants";
+} from '../utils/constants';
 
 export class ChartManager {
   chart: Chart;
 
   constructor() {
-    const chartCanvas = document.getElementById("chart") as HTMLCanvasElement;
+    const chartCanvas = document.getElementById('chart') as HTMLCanvasElement;
     Chart.register(...registerables);
     this.chart = new Chart(chartCanvas, {
-      type: "line",
+      type: 'line',
       data: {
         labels: [],
         datasets: [
-          this.generateDataset("avg red age", RED_FACTION_COLOR),
-          this.generateDataset("max red age", MAX_AGE_RED_COLOR),
-          this.generateDataset("avg green age", GREEN_FACTION_COLOR),
-          this.generateDataset("max green age", MAX_AGE_GREEN_COLOR),
-          this.generateDataset("avg blue age", BLUE_FACTION_COLOR),
-          this.generateDataset("max blue age", MAX_AGE_BLUE_COLOR),
+          this.generateDataset('avg red age', RED_FACTION_COLOR),
+          this.generateDataset('max red age', MAX_AGE_RED_COLOR),
+          this.generateDataset('avg green age', GREEN_FACTION_COLOR),
+          this.generateDataset('max green age', MAX_AGE_GREEN_COLOR),
+          this.generateDataset('avg blue age', BLUE_FACTION_COLOR),
+          this.generateDataset('max blue age', MAX_AGE_BLUE_COLOR),
         ],
       },
     });
@@ -55,7 +55,7 @@ export class ChartManager {
     if (this.chart.data.datasets[0].data.length > 50) {
       this.chart.data.datasets.forEach((dataset) => dataset.data.shift());
     } else {
-      this.chart.data.labels?.push?.("");
+      this.chart.data.labels?.push?.('');
     }
     this.chart.data.datasets[0].data.push(avgRedAge);
     this.chart.data.datasets[1].data.push(maxRedAge);
@@ -67,20 +67,16 @@ export class ChartManager {
   }
 
   getAvgAge(creatures: Creature[]) {
-    let sum = 0;
-    for (const creature of creatures) {
-      sum += creature.age;
-    }
-    return sum / creatures.length;
+    return (
+      creatures.reduce((acc, creature) => acc + creature.age, 0) /
+      creatures.length
+    );
   }
 
   getMaxAge(creatures: Creature[]) {
-    let maxAge = 0;
-    for (const creature of creatures) {
-      if (creature.age > maxAge) {
-        maxAge = creature.age;
-      }
-    }
-    return maxAge;
+    return creatures.reduce(
+      (acc, creature) => (creature.age > acc ? creature.age : acc),
+      0,
+    );
   }
 }

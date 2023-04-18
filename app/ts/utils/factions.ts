@@ -5,11 +5,11 @@ import {
   LOWER_DAMAGE_COEF,
   RED_FACTION_COLOR,
   SAME_FACTION_COEF,
-} from "./constants";
+} from './constants';
 
 export type factionType = {
   id: number;
-  name: "red" | "green" | "blue";
+  name: 'red' | 'green' | 'blue';
   color: string;
   coefficients: {
     red: number;
@@ -20,7 +20,7 @@ export type factionType = {
 
 export const redFaction: factionType = {
   id: 0,
-  name: "red",
+  name: 'red',
   color: RED_FACTION_COLOR,
   coefficients: {
     red: SAME_FACTION_COEF,
@@ -31,7 +31,7 @@ export const redFaction: factionType = {
 
 export const greenFaction: factionType = {
   id: 1,
-  name: "green",
+  name: 'green',
   color: GREEN_FACTION_COLOR,
   coefficients: {
     red: LOWER_DAMAGE_COEF,
@@ -42,7 +42,7 @@ export const greenFaction: factionType = {
 
 export const blueFaction: factionType = {
   id: 2,
-  name: "blue",
+  name: 'blue',
   color: BLUE_FACTION_COLOR,
   coefficients: {
     red: HIGHER_DAMAGE_COEF,

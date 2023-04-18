@@ -1,4 +1,4 @@
-import { lerp } from "./lerp";
+import { lerp } from './lerp';
 
 /**
  * Returns a random number between two values

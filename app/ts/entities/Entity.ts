@@ -1,12 +1,12 @@
-import { Vector } from "./Vector";
+import { Vector } from './Vector';
 
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   HALF_CANVAS_HEIGHT,
   HALF_CANVAS_WIDTH,
-} from "../utils/constants";
-import { randomBetween } from "../utils/randomBetween";
+} from '../utils/constants';
+import { randomBetween } from '../utils/randomBetween';
 
 export default class Entity {
   position: Vector;
@@ -18,11 +18,11 @@ export default class Entity {
   constructor({ x, y, velocityX, velocityY, size, color }: constructorProps) {
     this.position = new Vector(
       x || randomBetween(0, CANVAS_WIDTH),
-      y || randomBetween(0, CANVAS_HEIGHT)
+      y || randomBetween(0, CANVAS_HEIGHT),
     );
     this.velocity = new Vector(
       velocityX || randomBetween(-5, 5),
-      velocityY || randomBetween(-5, 5)
+      velocityY || randomBetween(-5, 5),
     );
     this.size = size;
     this.color = color;
